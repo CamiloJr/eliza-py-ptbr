@@ -1,8 +1,8 @@
-# ELIZA-PY — Português Brasileiro (PT-BR)
+# ELIZA-PY, Português Brasileiro (PT-BR)
 
 Implementação da **ELIZA** adaptada para conversação em **português brasileiro (PT-BR)**, baseada no projeto [`eliza-py`](https://github.com/rdimaio/eliza-py) e no clássico script **DOCTOR**, inspirado no trabalho de Joseph Weizenbaum.
 
-Esta adaptação preserva a arquitetura determinística da ELIZA — baseada em **palavras-chave**, **ranking**, **regras de decomposição**, **regras de remontagem** e **memória** — sem utilizar aprendizado de máquina, modelos de linguagem ou serviços externos.
+Esta adaptação preserva a arquitetura determinística da ELIZA, baseada em **palavras-chave**, **ranking**, **regras de decomposição**, **regras de remontagem** e **memória**, sem utilizar aprendizado de máquina, modelos de linguagem ou serviços externos.
 
 A tradução dos arquivos linguísticos não foi realizada de forma literal. As regras foram revisadas e adaptadas para produzir respostas com melhor coerência **semântica, sintática e lexical** em português brasileiro.
 
@@ -121,7 +121,7 @@ Contém informações linguísticas gerais utilizadas pelo motor.
 
 Principais campos:
 
-- **`substitutions`** — realiza normalização lexical e ortográfica da entrada, incluindo formas como:
+- **`substitutions`**, realiza normalização lexical e ortográfica da entrada, incluindo formas como:
   - `vc → você`
   - `tô → estou`
   - `ta → está`
@@ -129,21 +129,21 @@ Principais campos:
 
   Também pode normalizar sinônimos, abreviações e saudações.
 
-- **`reflections`** — realiza mudanças de perspectiva nos componentes utilizados para construir a resposta, por exemplo:
+- **`reflections`**, realiza mudanças de perspectiva nos componentes utilizados para construir a resposta, por exemplo:
   - `eu → você`
   - `meu → seu`
   - `minha → sua`
 
-- **`tags`** — agrupa palavras pertencentes a campos semânticos relacionados, como:
+- **`tags`**, agrupa palavras pertencentes a campos semânticos relacionados, como:
   - família;
   - desejo;
   - crença;
   - felicidade;
   - tristeza.
 
-- **`memory_inputs`** — define palavras ou construções que podem alimentar a pilha de memória.
+- **`memory_inputs`**, define palavras ou construções que podem alimentar a pilha de memória.
 
-- **`exit_inputs`** — define expressões utilizadas para encerrar a conversa.
+- **`exit_inputs`**, define expressões utilizadas para encerrar a conversa.
 
 ### `scripts/doctor.json`
 
@@ -160,8 +160,8 @@ O arquivo define:
 
 Duas palavras-chave especiais são utilizadas pelo mecanismo:
 
-- **`^`** — permite recuperar uma resposta da pilha de memória;
-- **`$`** — permite selecionar uma resposta genérica.
+- **`^`**, permite recuperar uma resposta da pilha de memória;
+- **`$`**, permite selecionar uma resposta genérica.
 
 ---
 
