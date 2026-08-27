@@ -3,7 +3,7 @@ import re
 from utils.rank import rank
 from utils.rules import decompose, reassemble
 
-def generate_response(in_str, script, substitutions, memory_stack, memory_inputs):
+def generate_response(in_str, script, substitutions, reflections, memory_stack, memory_inputs):
     """Generate response from user input, according to a script.
 
     Parameters
@@ -36,10 +36,10 @@ def generate_response(in_str, script, substitutions, memory_stack, memory_inputs
         comps, reassembly_rule = decompose(keyword, sentence, script)
         # Break if matching decomposition rule has been found
         if comps:
-            response = reassemble(comps, reassembly_rule)
+            response = reassemble(comps, reassembly_rule, reflections)
             # For certain keywords, generate an additional response to push onto memory stack
             if keyword in memory_inputs:
-                generate_memory_response(sentence, script, memory_stack)
+                generate_memory_response(sentence, script, reflections, memory_stack)
             break
     # If no matching decomposition rule has been found
     else:
@@ -49,12 +49,12 @@ def generate_response(in_str, script, substitutions, memory_stack, memory_inputs
             response = memory_stack.pop()
         # Otherwise, respond with a generic answer
         else:
-            response = generate_generic_response(script)
+            response = generate_generic_response(script, reflections)
 
     response = prepare_response(response)
     return response
 
-def generate_generic_response(script):
+def generate_generic_response(script, reflections=None):
     """Generate a generic response that is independent of the user input.
 
     Parameters
@@ -70,9 +70,9 @@ def generate_generic_response(script):
     """
     # '$' is the generic answer keyword
     comps, reassembly_rule = decompose('$', '$', script)
-    return reassemble(comps, reassembly_rule)
+    return reassemble(comps, reassembly_rule, reflections)
 
-def generate_memory_response(sentence, script, memory_stack):
+def generate_memory_response(sentence, script, reflections, memory_stack):
     """Generate a response for the memory stack.
 
     Parameters
@@ -87,7 +87,7 @@ def generate_memory_response(sentence, script, memory_stack):
     """
     # '^' is the memory stack keyword
     mem_comps, mem_reassembly_rule = decompose('^', sentence, script)
-    mem_response = reassemble(mem_comps, mem_reassembly_rule)
+    mem_response = reassemble(mem_comps, mem_reassembly_rule, reflections)
     memory_stack.append(mem_response)
 
 def prepare_response(response):
@@ -105,7 +105,7 @@ def prepare_response(response):
 
     """
     response = clean_string(response)
-    response += "\nYou: "
+    response += "\nVocê: "
     return response
 
 def clean_string(in_str):

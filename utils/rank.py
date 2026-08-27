@@ -1,119 +1,75 @@
 import re
 
+from utils.language import apply_mapping
+
+
 def rank(sentences, script, substitutions):
-    """Rank keywords according to a script.
-    Only returns the sentence with the highest ranked keyword.
+    """Choose the sentence with the highest-ranked script keyword.
 
-    Parameters
-    ----------
-    sentences : str[]
-        Array of sentences.
-
-    script : dict[]
-        JSON object containing ranks of different keywords.
-
-    substitutions : dict
-        Key-value pairs where key = word to substitute, value = new word.
-
-    Returns
-    -------
-    sentences[max_index] : str
-        Sentence with highest ranked keyword in `sentences`.
-    sorted_keywords : str[]
-        Words in `sentences[max_index]` sorted in descending order based on their rank.
-
+    Unlike the original eliza-py implementation, this version also supports
+    multiword keywords (for example ``por que`` and ``o que``), which are
+    important for idiomatic Brazilian Portuguese.
     """
-    all_keywords = []
-    all_ranks = []
-    maximums = []
+    candidates = []
 
-    # Iterating using index so that sentences in the list can be modified directly
-    for i in range(0, len(sentences)):
-        # Remove all punctuation
-        sentences[i] = re.sub(r'[#$%&()*+,-./:;<=>?@[\]^_{|}~]', '', sentences[i])
-        # Substitute keywords
-        sentences[i] = substitute(sentences[i], substitutions)
+    for sentence_index, sentence in enumerate(sentences):
+        # Keep Portuguese letters/accents; remove punctuation that should not
+        # participate in matching. Apostrophes are preserved for forms like tô.
+        normalized = re.sub(r'[#$%&()*+,\-./:;<=>?@[\]^_{|}~]', '', sentence)
+        normalized = substitute(normalized, substitutions)
+        normalized = ' '.join(normalized.split())
 
-        # Check if sentence is not empty at this point
-        if sentences[i]:
-            keywords = sentences[i].lower().split()
-            all_keywords.append(keywords)
-            
-            # Get ranks for this sentence
-            ranks = get_ranks(keywords, script)
+        if not normalized:
+            continue
 
-            # Append maximum rank in this sentence
-            maximums.append(max(ranks))
+        matches = get_keyword_matches(normalized, script)
+        max_rank = matches[0][0] if matches else 0
+        candidates.append((max_rank, sentence_index, normalized, matches))
 
-            all_ranks.append(ranks)
-        
-    # Return earliest sentence with highest keyword rank
-    max_rank = max(maximums)
-    max_index = maximums.index(max_rank)
-    
-    keywords = all_keywords[max_index]
-    ranks = all_ranks[max_index]
+    if not candidates:
+        return '', []
 
-    # Sort list of keywords according to list of ranks
-    sorted_keywords = [x for _,x in sorted(zip(ranks, keywords), reverse=True)]
+    # Highest rank wins; for ties, preserve the earliest sentence.
+    best = max(candidates, key=lambda item: (item[0], -item[1]))
+    _, _, sentence, matches = best
 
-    return sentences[max_index], sorted_keywords
+    # Matches are already sorted by rank desc and appearance order.
+    sorted_keywords = [keyword for _, _, keyword in matches]
+    return sentence, sorted_keywords
+
+
+def get_keyword_matches(sentence, script):
+    """Return matching script keywords as (rank, position, keyword) tuples."""
+    matches = []
+    lower_sentence = sentence.lower()
+
+    for entry in script:
+        keyword = entry['keyword']
+        if keyword in {'$', '^'}:
+            continue
+
+        phrase_pattern = re.escape(keyword).replace(r'\ ', r'\s+')
+        match = re.search(r'(?<!\w)' + phrase_pattern + r'(?!\w)', lower_sentence, re.IGNORECASE)
+        if match:
+            matches.append((entry['rank'], match.start(), keyword))
+
+    matches.sort(key=lambda item: (-item[0], item[1]))
+    return matches
+
 
 def get_ranks(keywords, script):
-    """Return ranks of queried keyword in a given script.
-
-    Parameters
-    ----------
-    keywords : str[]
-        Array of keywords to search in the script.
-    script : dict[]
-        JSON object containing ranks of different keywords.
-    
-    Returns
-    -------
-    ranks : int[]
-        Array of integers in the same order as their respective keywords
-    
-    """
+    """Compatibility helper retained for users importing it directly."""
     ranks = []
-
-    # Populate list of ranks
     for keyword in keywords:
-        for d in script:
-            if d['keyword'] == keyword:
-                ranks.append(d['rank'])
+        for entry in script:
+            if entry['keyword'] == keyword:
+                ranks.append(entry['rank'])
                 break
-        # If no rank has been specified for a word, set its rank to 0
         else:
             ranks.append(0)
-    
     return ranks
 
+
 def substitute(in_str, substitutions):
-    """Substitute words in a string according to a dict.
-
-    Parameters
-    ----------
-    in_str : str
-        String to apply substitutions to.
-    substitutions : dict
-        Key-value pairs where key = word to substitute, value = new word.
-
-    Returns
-    -------
-    out_str : str
-        String with relevant substitutions applied.
-
-    """
-    out_str = ''
-
-    # Cycle through all words in string
-    for word in in_str.split():
-        # If substitutions specifies a substitution for this word, substitute it
-        if word.lower() in substitutions:
-            out_str += substitutions[word.lower()] + ' '
-        # Otherwise carry over the same word
-        else:
-            out_str += word + ' '
-
-    return out_str
+    """Normalize words and phrases before keyword matching."""
+    return apply_mapping(in_str, substitutions)

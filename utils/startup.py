@@ -44,6 +44,6 @@ def load_script(script_path):
         Loaded JSON object.
 
     """
-    with open(script_path) as f:
+    with open(script_path, encoding='utf-8') as f:
         script = json.load(f)
     return script

@@ -1,147 +1,125 @@
-# eliza.py
-**ELIZA** is a natural language processing program developed from 1964 to 1966 by Joseph Weizenbaum, 
-originally implemented in MAD-SLIP. 
-You can read the 1966 paper [here](https://dl.acm.org/doi/10.1145/365153.365168). 
+# ELIZA-PY — adaptação para Português Brasileiro (PT-BR)
 
-ELIZA uses pattern matching, decomposition and reassembly rules 
-to emulate a Rogerian psychotherapist.
+Esta versão adapta o projeto **eliza-py** e o script **DOCTOR**, inspirado na ELIZA de Joseph Weizenbaum, para conversação em **português brasileiro**.
 
-![Demo](./demo.svg)
-(Inputs taken from [Weizenbaum's 1966 paper, pp.1-2.](https://dl.acm.org/doi/10.1145/365153.365168))
+A adaptação não é uma tradução literal das frases em inglês. As regras foram reescritas para preservar sentido **semântico, sintático e lexical** em PT-BR, mantendo o funcionamento clássico da ELIZA baseado em palavras-chave, decomposição, remontagem, ranking e memória.
 
-# Program flow
+## Requisitos
 
-![Flowchart](./flowchart.svg)
+- Python 3.x
+- Nenhuma biblioteca externa é necessária.
 
-# Download
-## Requirements
-- Python 3.x 
-(should work with Python 2 by adjusting back the syntax of some commands)
+## Executar
 
-## Via command-line
+No diretório do projeto:
+
 ```bash
-# Clone the repository
-$ git clone https://github.com/rdimaio/eliza-py
+python eliza.py
 ```
 
-# Usage
-## Starting the program
+Exemplo:
+
+```text
+Eliza: Olá. Conte-me o que está acontecendo.
+Você: Eu estou triste
+Eliza: Sinto muito que você esteja se sentindo triste.
+Você: Eu quero ajuda
+Eliza: O que significaria para você conseguir ajuda?
+```
+
+Para encerrar, use `tchau`, `adeus`, `sair`, `fim`, `terminar`, `encerrar` ou `até logo`.
+
+Para reiniciar o ciclo das respostas e limpar a memória durante uma sessão, use `reiniciar` ou `reset`.
+
+## Arquivos linguísticos
+
+### `scripts/general.json`
+
+Contém as informações gerais da adaptação PT-BR:
+
+- `substitutions`: normalização lexical e ortográfica da entrada, incluindo formas como `vc → você`, `tô → estou`, `ta → está`, `nao → não`, além de sinônimos e saudações;
+- `reflections`: reflexões de pessoa e posse utilizadas **somente nos componentes remontados**, por exemplo `eu → você`, `meu → seu` e `minha → sua`;
+- `tags`: campos semânticos, como família, desejo, crença, felicidade e tristeza;
+- `memory_inputs`: palavras que alimentam a pilha de memória;
+- `exit_inputs`: expressões utilizadas para encerrar a conversa.
+
+### `scripts/doctor.json`
+
+Contém o script DOCTOR adaptado para PT-BR:
+
+- palavras-chave e seus rankings;
+- regras de decomposição;
+- respostas de remontagem;
+- regras especiais para memória (`^`) e resposta genérica (`$`).
+
+## Alterações no motor para português
+
+O inglês permite reflexões simples como `I ↔ you` e `am ↔ are`. Em português, aplicar a mesma estratégia diretamente quebra concordância e flexão verbal. Por isso esta versão faz algumas alterações no motor original:
+
+1. **Normalização e reflexão foram separadas.** A entrada é normalizada antes do reconhecimento das regras, mas a mudança de perspectiva é aplicada apenas aos fragmentos que voltam para a resposta.
+2. **Palavras-chave compostas são reconhecidas.** Expressões como `por que` e `o que` podem ter ranking próprio.
+3. **Substituições de expressões inteiras são suportadas.** Isso permite, por exemplo, `boa noite → olá` e reflexões como `com você → comigo`.
+4. **Reflexões verbais são conservadoras.** Formas inequivocamente de primeira pessoa podem ser convertidas para a forma usada com `você`, mas formas ambíguas de terceira pessoa não são alteradas cegamente.
+5. **Os JSON são abertos explicitamente como UTF-8**, garantindo acentos em Windows, Linux e macOS.
+
+Essas alterações continuam determinísticas e baseadas em regras; não foi adicionado aprendizado de máquina, modelo de linguagem ou serviço externo.
+
+## Testes
+
+Há testes básicos em `tests/test_ptbr.py`. Execute:
+
 ```bash
-# Go into the project folder
-$ cd eliza-py
-
-# Execute the file
-$ python eliza.py
-Eliza: Hi.
-You: [type something]
+python -m unittest discover -s tests -v
 ```
 
-## Example conversation (using the same inputs as the original paper, pp. 1-2)
-```
-You: Men are all alike.
-Eliza: In what way?
-You: They're always bugging us about something or other.
-Eliza: Can you think of a specific example?
-You: Well, my boyfriend made me come here.
-Eliza: Your boyfriend made you come here?
-You: He says I'm depressed much of the time.
-Eliza: I am sorry to hear that you are depressed.
-You: It's true. I am unhappy.
-Eliza: Do you think coming here will help you not to be unhappy?
-You: I need some help, that much seems certain.
-Eliza: What would it mean to you if you got some help?
-You: Perhaps I could learn to get along with my mother.
-Eliza: Tell me more about your family.
-```
+Eles verificam, entre outros casos:
 
-## Exiting the program
-```bash
-# You can type bye, goodbye, done, quit or exit. Or use CTRL+C, if you want to be rude about it...
-You: bye
-Eliza: Goodbye.
+- português coloquial (`vc`, `tá`);
+- sentimentos;
+- reflexões de pronomes e possessivos;
+- preservação de verbos de terceira pessoa;
+- palavras-chave compostas;
+- perguntas sobre ajuda;
+- memória;
+- saudações.
+
+## Arquivos originais em inglês
+
+Os scripts originais recebidos foram preservados em:
+
+```text
+scripts/en/general.json
+scripts/en/doctor.json
+README_EN.md
 ```
 
-# Script structure
+Isso permite comparar diretamente a implementação original com a adaptação PT-BR.
 
-## `scripts/general.json`
-This script handles general English language information that is not necessarily tied into the other script the program uses,
-as well as useful inputs for the program.
+## Estrutura principal
 
-- `substitutions`: specifies which keywords should be substituted before applying a custom script
-- `tags`: specifies keywords within the same semantic field
-- `memory_inputs`: array of keywords that prompt the generation of an additional response added to the memory stack
-- `exit_inputs`: array of keywords that can be used to quit the program
+```text
+eliza-py/
+├── eliza.py
+├── README.md
+├── README_EN.md
+├── scripts/
+│   ├── general.json          # PT-BR
+│   ├── doctor.json           # PT-BR
+│   └── en/
+│       ├── general.json      # original
+│       └── doctor.json       # original
+├── tests/
+│   └── test_ptbr.py
+└── utils/
+    ├── language.py
+    ├── rank.py
+    ├── response.py
+    ├── rules.py
+    └── startup.py
+```
 
-## `scripts/doctor.json`
-This script simulates a **Rogerian psychotherapist**.
-It has been filled according to the appendix in the original paper (p. 9), including ranks.
-An additional great reference is the script file from [Charles Hayen's Java implementation of ELIZA](http://chayden.net/eliza/Eliza.html).
-Some small additions have been made to make the program feel a bit nicer (e.g. the program responds to greetings).
+## Referência
 
-Each element in the JSON file follows this structure:
-- `keyword`: keyword that the program looks for in the user's input (**after substitution**, like in the original implementation)
-    - Two special keywords exist:
-        - `$`: specifies that a generic answer should be given
-        - `^`: specifies that an answer from the memory stack should be given
-- `rank`: rank of that keyword
-- `rules`: Array of decomposition rules and matching reassembly rules in the form:
-    - `decomp`: Decomposition rule (using the same syntax as the original 1966 paper)
-    - `reassembly`: Array of reassembly rules to be used with the decomposition rule specified in `decomp`
-        - Reassembly rules use 1-indexing like in the original paper;
-        note that when a `tag` in a decomposition rule is equivalent
-        to two components in its reassembly rules instead of one
-        (to be able to use regex)
-    - `last_used_reassembly_rule`: ID of last used reassembly rule for this decomposition rule (0-indexed);
-    it is incremented everytime the decomposition rule is matched and it cycles back to the beginning
-    when the last reassembly rule in the array is used.
+J. Weizenbaum, “ELIZA—a computer program for the study of natural language communication between man and machine,” *Communications of the ACM*, vol. 9, no. 1, pp. 36–45, 1966.
 
-
-# FAQ
-
-## Differences from original implementation
-
-- **Keyword ranking**:
-    - Original implementation: keywords are not guaranteed to be ranked in descending order;
-    as seen in Fig. 2 on p. 4 of the original paper, a keyword is placed on top of the keystack
-    if its rank is higher than the highest rank encountered in the sentence so far,
-    otherwise it is placed on the bottom of the keystack.
-    - This implementation: keywords are guaranteed to be ranked in descending order.
-- **Sentence tokenization**:
-    - Original implementation: if a comma/period is encountered and a keyword has already been found,
-    all subsequent text is deleted (p. 2). 
-    - This implementation: sentences are split based on punctuation (—,.:;-),
-    and the sentence with the highest ranked keyword is chosen to be decomposed.
-    - Main reasons:
-        - The emphasis of the user's input may not necessarily be in the first section of the sentence
-        - The section with the highest ranked keyword has a higher chance of having decomposition rules
-        for that keyword, as it has a rank in the first place
-- **Tags**:
-    - Original implementation: `DLIST` is used to indicate tags.
-    - This implementation: `tag` is used to indicate tags.
-    - The functionality is the same.
-- **Memory stack**:
-    - Original implementation: the keyword `my` is associated with the memory stack (p. 6);
-    - This implementation: the memory stack is called when no matching decomposition rule is found.
-
-## Why are scripts stored in JSON and not CSV?
-In the `doctor` script, each keyword has a **variable** amount of decomposition rules,
-and each decomposition rule has a **variable** amount of reassembly rules.
-I think JSON can store this information structure in a much more intuitive way.
-
-The `general` script could be stored in `.csv` as there is no nesting,
-but I preferred to use JSON again to remain consistent with the other script.
-
-# Future work
-- Allow the user to edit the script during a session by typing "edit" as in the original implementation (p. 7 of the paper)
-- Translate to other languages (Italian, Spanish..)
-- Consider including a randomized delay before the program responds, strengthening the human-like feel of the conversation
-
-# References
-- J. Weizenbaum, “ELIZA-a computer program for the study of natural language communication between man and machine,” Communications of the ACM, vol. 9, no. 1, pp. 36–45, Jan. 1966. [Link](https://dl.acm.org/doi/10.1145/365153.365168)
-
-- The script file from [Charles Hayen's Java implementation of ELIZA](http://chayden.net/eliza/Eliza.html)
-
-## Tools
-
-- **Demo animation**: [asciinema](https://github.com/asciinema/asciinema) and [termtosvg](https://github.com/nbedos/termtosvg)
-- **Flowchart**: [draw.io](draw.io)
+A base deste projeto é a implementação `eliza-py` de rdimaio. O mecanismo continua inspirado no script DOCTOR e na notação de decomposição/remontagem descrita por Weizenbaum.

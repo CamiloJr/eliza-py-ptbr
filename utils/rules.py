@@ -1,5 +1,7 @@
 import re
 
+from utils.language import apply_mapping
+
 def decompose(keyword, in_str, script):
     """Find matching decomposition rule for a given keyword and string, if possible.
 
@@ -42,7 +44,7 @@ def decompose(keyword, in_str, script):
 
     return comps, reassembly_rule
 
-def reassemble(components, reassembly_rule):
+def reassemble(components, reassembly_rule, reflections=None):
     """Reassemble a list of strings given a reassembly rule.
     Note: reassembly rules are 1-indexed, according to the original paper.
     
@@ -70,7 +72,10 @@ def reassemble(components, reassembly_rule):
         if comp.isnumeric():
             # int(comp)-1 due to the fact that 
             # reassembly rules in Weizenbaum notation are 1-indexed
-            response += components[int(comp)-1] + ' '
+            component = components[int(comp)-1]
+            if reflections:
+                component = apply_mapping(component, reflections)
+            response += component + ' '
         # Otherwise, place the word itself
         else:
             response += comp + ' '
