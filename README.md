@@ -83,31 +83,15 @@ Eles verificam, entre outros casos:
 - memória;
 - saudações.
 
-## Arquivos originais em inglês
-
-Os scripts originais recebidos foram preservados em:
-
-```text
-scripts/en/general.json
-scripts/en/doctor.json
-README_EN.md
-```
-
-Isso permite comparar diretamente a implementação original com a adaptação PT-BR.
-
 ## Estrutura principal
 
 ```text
 eliza-py/
 ├── eliza.py
 ├── README.md
-├── README_EN.md
 ├── scripts/
 │   ├── general.json          # PT-BR
-│   ├── doctor.json           # PT-BR
-│   └── en/
-│       ├── general.json      # original
-│       └── doctor.json       # original
+│   └── doctor.json           # PT-BR
 ├── tests/
 │   └── test_ptbr.py
 └── utils/
